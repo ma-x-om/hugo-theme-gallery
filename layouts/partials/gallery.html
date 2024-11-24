@@ -4,11 +4,31 @@
     {{ range $image := .Resources.ByType "image" }}
       {{ $title := "" }}
       {{ $date := "" }}
+      {{ $model := "" }}
+      {{ $fstop := "" }}
+      {{ $exposure := "" }}
+      {{ $iso := "" }}
+      {{ $focallength := "" }}
       {{ with $image.Exif }}
-        {{ $date = .Date }}
+        {{ $date = .Date.Format "January 02, 2006" }}
         {{ with .Tags.ImageDescription }}
           {{/* Title from EXIF ImageDescription */}}
           {{ $title = . }}
+        {{ end }}
+        {{ with .Tags.FocalLength }}
+          {{ $focallength = . }}
+        {{ end }}
+        {{ with .Tags.ExposureTime }}
+          {{ $exposure = . }}
+        {{ end }}
+        {{ with .Tags.ISO }}
+          {{ $iso = . }}
+        {{ end }}
+        {{ with .Tags.FNumber }}
+          {{ $fstop = . }}
+        {{ end }}
+        {{ with .Tags.Model }}
+          {{ $model = . }}
         {{ end }}
       {{ end }}
       {{ if ne $image.Title $image.Name }}
@@ -18,6 +38,11 @@
       {{ $images = $images | append (dict
         "Name" $image.Name
         "Title" $title
+        "Model" $model
+        "FocalLength" $focallength
+        "FStop" $fstop
+        "ExposureTime" $exposure
+        "ISO" $iso
         "Date" $date
         "image" $image
         )
@@ -30,7 +55,12 @@
       {{ $color := index $thumbnail.Colors 0 | default "transparent" }}
       <a class="gallery-item" href="{{ $image.RelPermalink }}" data-pswp-src="{{ $full.RelPermalink }}" data-pswp-width="{{ $full.Width }}" data-pswp-height="{{ $full.Height }}" data-pswp-target="{{ $image.Name | urlize }}" title="{{ .Title }}" itemscope itemtype="https://schema.org/ImageObject" style="aspect-ratio: {{ $thumbnail.Width }} / {{ $thumbnail.Height }}">
         <figure style="background-color: {{ $color }}; aspect-ratio: {{ $thumbnail.Width }} / {{ $thumbnail.Height }}">
-          <img class="lazyload" width="{{ $thumbnail.Width }}" height="{{ $thumbnail.Height }}" data-src="{{ $thumbnail.RelPermalink }}" alt="{{ .Title }}" />
+          <img class="lazyload" width="{{ $thumbnail.Width }}" height="{{ $thumbnail.Height }}" data-src="{{ $thumbnail.RelPermalink }}" alt='
+          "{{ .Title }}"<br>
+          {{ .Date }}<br>
+          {{ .Model }}<br>
+          {{ .FocalLength }} mm, f/{{ .FStop }}, {{ .ExposureTime }} s, ISO{{ .ISO }}
+          '/>
         </figure>
         <meta itemprop="contentUrl" content="{{ $image.RelPermalink }}" />
         {{ with site.Params.Author }}
